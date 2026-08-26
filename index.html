@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tree Test — Nomenclatura de tokens de color</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#F5F6F8;
+    --surface:#FFFFFF;
+    --surface-2:#EFF1F5;
+    --ink:#14171C;
+    --ink-soft:#5B6270;
+    --ink-faint:#8A90A0;
+    --border:#E1E4EA;
+    --accent:#3454D1;
+    --accent-soft:#EAEEFC;
+    --accent-ink:#FFFFFF;
+    --success:#1E8E5A;
+    --success-bg:#E7F6EE;
+    --error:#D6455B;
+    --error-bg:#FCEAED;
+    --warning:#B8862B;
+    --warning-bg:#FBF3E1;
+    --radius-sm:6px;
+    --radius:12px;
+    --radius-lg:18px;
+    --shadow:0 1px 2px rgba(20,23,28,.04), 0 8px 24px rgba(20,23,28,.06);
+    --font:"Roboto",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:"SF Mono","Roboto Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:var(--font);
+    background:var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.45;
+  }
+  #app{max-width:920px;margin:0 auto;padding:28px 20px 80px;min-height:100vh;}
+  h1,h2,h3{margin:0 0 4px;font-weight:650;letter-spacing:-.01em;}
+  h1{font-size:22px;}
+  h2{font-size:17px;}
+  h3{font-size:14px;}
+  p{margin:0;}
+  .muted{color:var(--ink-soft);font-size:13.5px;}
+  .faint{color:var(--ink-faint);font-size:12.5px;}
+  button{font-family:var(--font);cursor:pointer;}
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+  .btn{
+    appearance:none;border:1px solid var(--border);background:var(--surface);
+    color:var(--ink);padding:9px 14px;border-radius:9px;font-size:13.5px;font-weight:560;
+    display:inline-flex;align-items:center;gap:6px;transition:.12s border-color, .12s background;
+  }
+  .btn:hover{border-color:#C6CBD6;}
+  .btn-primary{background:#0050B1;border-color:#0050B1;color:var(--accent-ink);}
+  .btn-primary:hover{background:#003E8A;border-color:#003E8A;}
+  .btn-accent-blue{background:#0050B1;border-color:#0050B1;color:#FFFFFF;}
+  .btn-accent-blue:hover{background:#003E8A;border-color:#003E8A;}
+  .btn-outline-blue{background:transparent;border-color:#0050B1;color:#0050B1;}
+  .btn-outline-blue:hover{background:#EAF1FB;}
+  .btn-ghost{background:transparent;border-color:transparent;color:#0050B1;}
+  .btn-ghost:hover{background:var(--surface-2);}
+  .btn-danger{color:var(--error);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btn-sm{padding:5px 10px;font-size:12.5px;border-radius:7px;}
+  input[type=text], textarea, select{
+    font-family:var(--font);font-size:13.5px;color:var(--ink);
+    border:1px solid var(--border);border-radius:8px;padding:8px 10px;background:var(--surface);
+    width:100%;
+  }
+  textarea{resize:vertical;min-height:56px;}
+
+  /* ---- top bar ---- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;gap:12px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#6C7FE8);flex:0 0 auto;}
+  .tabs{display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:10px;}
+  .tab{border:none;background:transparent;padding:7px 13px;border-radius:7px;font-size:13px;font-weight:560;color:#0050B1;}
+  .tab.active{background:var(--surface);color:#0050B1;box-shadow:var(--shadow);}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+  .card + .card{margin-top:16px;}
+
+  /* ---- role screen ---- */
+  .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px;}
+  @media (max-width:640px){.role-grid{grid-template-columns:1fr;}}
+  .role-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+    padding:24px;text-align:left;transition:.12s transform, .12s border-color;
+  }
+  .role-card:hover{border-color:var(--accent);transform:translateY(-1px);}
+  .role-card .icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;font-size:18px;}
+  .role-card.p .icon{background:var(--accent-soft);}
+  .role-card.a .icon{background:var(--surface-2);}
+
+  /* ---- token path chip trail (signature element) ---- */
+  .token-trail{
+    display:flex;align-items:center;flex-wrap:wrap;gap:0;font-family:var(--mono);font-size:13px;
+    background:#E4E7ED;color:var(--ink);padding:10px 12px;border-radius:9px;
+  }
+  .token-trail .seg{color:#0050B1;font-weight:700;}
+  .token-trail .sep{color:#8A90A0;margin:0 2px;}
+  .token-trail .cursor{display:inline-block;width:1px;height:14px;background:#0050B1;margin-left:2px;animation:blink 1s step-end infinite;}
+  @keyframes blink{50%{opacity:0;}}
+
+  /* ---- tree editor ---- */
+  .node-row{display:flex;align-items:center;gap:8px;padding:6px 0;}
+  .node-children{margin-left:22px;border-left:1px dashed var(--border);padding-left:14px;}
+  .node-input{max-width:260px;}
+  .add-root{margin-top:6px;}
+
+  /* ---- tasks editor ---- */
+  .task-block{border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;position:relative;}
+  .task-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
+  .field-row{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:8px;}
+  .field-label{font-size:12px;color:var(--ink-soft);font-weight:600;margin-bottom:3px;display:block;}
+  .swatch-input{display:flex;align-items:center;gap:8px;}
+  .swatch{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);flex:0 0 auto;}
+
+  /* ---- test mode ---- */
+  .progress-bar{height:4px;background:var(--surface-2);border-radius:4px;overflow:hidden;margin-bottom:22px;}
+  .progress-fill{height:100%;background:var(--accent);transition:width .25s;}
+  .task-prompt-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:18px;}
+  .prompt-swatch{width:52px;height:52px;border-radius:12px;border:1px solid var(--border);margin-bottom:14px;}
+  .breadcrumb{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;font-size:13px;color:var(--ink-soft);}
+  .breadcrumb-trail{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0;flex:1;}
+  .breadcrumb .crumb{font-weight:600;color:var(--ink);}
+  .tree-nav{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+  .tree-item{
+    width:100%;display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;border:none;background:var(--surface);border-bottom:1px solid var(--border);
+    font-size:14.5px;color:var(--ink);text-align:left;font-weight:520;
+  }
+  .tree-item:last-child{border-bottom:none;}
+  .tree-item:hover{background:var(--surface-2);}
+  .tree-item .chev{color:var(--ink-faint);font-size:13px;}
+  .empty-leaf{padding:18px;color:var(--ink-soft);font-size:13.5px;}
+  .choose-bar{display:flex;justify-content:flex-end;align-items:center;margin-top:14px;gap:10px;flex-wrap:wrap;}
+
+  .feedback{border-radius:var(--radius);padding:18px 20px;margin-bottom:14px;}
+  .feedback.ok{background:var(--success-bg);color:var(--success);}
+  .feedback.bad{background:var(--error-bg);color:var(--error);}
+  .feedback .path{font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);margin-top:6px;}
+
+  /* ---- results ---- */
+  .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+  @media (max-width:640px){.stat-grid{grid-template-columns:1fr 1fr;}}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+  .stat .num{font-size:22px;font-weight:700;letter-spacing:-.02em;}
+  .stat .lbl{font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;}
+  .task-result{border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+  .accordion-item{border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+  .accordion-header{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px;background:var(--surface);border:none;text-align:left;font-size:14px;}
+  .accordion-header:hover{background:var(--surface-2);}
+  .accordion-body{padding:2px 16px 12px;border-top:1px solid var(--border);}
+  .participant-task-row{padding:12px 0;border-bottom:1px solid var(--border);}
+  .participant-task-row:last-child{border-bottom:none;}
+  .chev{display:inline-block;transition:transform .15s;color:var(--ink-faint);flex:0 0 auto;}
+  .bar-row{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:12.5px;}
+  .bar-track{flex:1;height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;}
+  .bar-fill{height:100%;background:var(--accent);}
+  .bar-fill.bad{background:var(--error);}
+
+  .empty-state{text-align:center;padding:50px 20px;color:var(--ink-soft);}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(20,23,28,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;}
+  .modal{background:var(--surface);border-radius:var(--radius);padding:20px;max-width:600px;width:100%;max-height:80vh;overflow:auto;}
+  .json-box{width:100%;height:260px;font-family:var(--mono);font-size:11.5px;}
+
+  .top-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .menu-wrap{position:relative;}
+  .menu-overlay{position:fixed;inset:0;z-index:35;background:transparent;border:none;padding:0;}
+  .menu-dropdown{position:absolute;right:0;top:calc(100% + 6px);z-index:40;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);min-width:180px;overflow:hidden;padding:5px;}
+  .menu-item{display:block;width:100%;text-align:left;padding:9px 12px;background:transparent;border:none;border-radius:7px;font-size:13px;color:var(--ink);}
+  .menu-item:hover{background:var(--surface-2);}
+  .menu-item-danger{color:var(--error);}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================= CONFIGURACIÓN DE SUPABASE ============================= */
+// Completa estas credenciales si deseas desplegar en GitHub Pages y conectar con Supabase.
+// Si las dejas vacías, la aplicación usará automáticamente el servidor local Express o localStorage.
+const SUPABASE_URL = "";
+const SUPABASE_ANON_KEY = "";
+
+/* ============================= POLYFILL DE STORAGE ============================= */
+if (!window.storage) {
+  if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof supabase !== 'undefined') {
+    console.log("Tree Test: Usando base de datos Supabase en la nube");
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    window.storage = {
+      async get(key) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('tree_test_storage')
+            .select('value')
+            .eq('key', key)
+            .maybeSingle();
+          
+          if (error) throw error;
+          return data ? { value: data.value } : null;
+        } catch (e) {
+          console.error("Supabase GET error, usando fallback de localStorage:", e);
+          const val = localStorage.getItem(key);
+          return val ? { value: val } : null;
+        }
+      },
+      async set(key, value) {
+        try {
+          const { error } = await supabaseClient
+            .from('tree_test_storage')
+            .upsert({ key, value });
+          if (error) throw error;
+        } catch (e) {
+          console.error("Supabase SET error, guardando en localStorage:", e);
+          localStorage.setItem(key, value);
+        }
+      },
+      async list(prefix) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('tree_test_storage')
+            .select('key')
+            .like('key', `${prefix}%`);
+          
+          if (error) throw error;
+          return { keys: (data || []).map(item => item.key) };
+        } catch (e) {
+          console.error("Supabase LIST error, listando de localStorage:", e);
+          const keys = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith(prefix)) keys.push(k);
+          }
+          return { keys };
+        }
+      },
+      async delete(key) {
+        try {
+          const { error } = await supabaseClient
+            .from('tree_test_storage')
+            .delete()
+            .eq('key', key);
+          if (error) throw error;
+        } catch (e) {
+          console.error("Supabase DELETE error, eliminando de localStorage:", e);
+          localStorage.removeItem(key);
+        }
+      }
+    };
+  } else {
+    // Fallback original (Servidor Express local o localStorage)
+    const isLocalFile = window.location.protocol === 'file:';
+    if (isLocalFile) {
+      console.log("Tree Test: Usando fallback de localStorage (modo archivo local)");
+      window.storage = {
+        async get(key) {
+          const val = localStorage.getItem(key);
+          return val ? { value: val } : null;
+        },
+        async set(key, value) {
+          localStorage.setItem(key, value);
+        },
+        async list(prefix) {
+          const keys = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith(prefix)) keys.push(k);
+          }
+          return { keys };
+        },
+        async delete(key) {
+          localStorage.removeItem(key);
+        }
+      };
+    } else {
+      console.log("Tree Test: Usando API del servidor local");
+      window.storage = {
+        async get(key) {
+          try {
+            const res = await fetch(`/api/storage?key=${encodeURIComponent(key)}`);
+            if (res.status === 404) return null;
+            if (!res.ok) throw new Error();
+            return await res.json();
+          } catch (e) {
+            const val = localStorage.getItem(key);
+            return val ? { value: val } : null;
+          }
+        },
+        async set(key, value) {
+          try {
+            const res = await fetch('/api/storage', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ key, value })
+            });
+            if (!res.ok) throw new Error();
+          } catch (e) {
+            localStorage.setItem(key, value);
+          }
+        },
+        async list(prefix) {
+          try {
+            const res = await fetch(`/api/storage/list?prefix=${encodeURIComponent(prefix)}`);
+            if (!res.ok) throw new Error();
+            const keys = await res.json();
+            return { keys };
+          } catch (e) {
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (k && k.startsWith(prefix)) keys.push(k);
+            }
+            return { keys };
+          }
+        },
+        async delete(key) {
+          try {
+            const res = await fetch(`/api/storage?key=${encodeURIComponent(key)}`, {
+              method: 'DELETE'
+            });
+            if (!res.ok) throw new Error();
+          } catch (e) {
+            localStorage.removeItem(key);
+          }
+        }
+      };
+    }
+  }
+}
+
+/* ============================= UTILIDADES ============================= */
+function uid(){ return Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4); }
+function slugify(s){ return (s||'').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'sin-nombre'; }
+function findNode(tree, id, path){
+  path = path || [];
+  for(const n of tree){
+    const p = path.concat([n]);
+    if(n.id === id) return p;
+    if(n.children && n.children.length){
+      const found = findNode(n.children, id, p);
+      if(found) return found;
+    }
+  }
+  return null;
+}
+function flattenWithPath(tree, parentPath){
+  parentPath = parentPath || [];
+  let out = [];
+  for(const n of tree){
+    const p = parentPath.concat([n]);
+    out.push({ id:n.id, node:n, pathNodes:p });
+    if(n.children && n.children.length){
+      out = out.concat(flattenWithPath(n.children, p));
+    }
+  }
+  return out;
+}
+function tokenPath(pathNodes){ return pathNodes.map(n=>slugify(n.label)).join('/'); }
+function labelPath(pathNodes, sep){ return pathNodes.map(n=>n.label).join(sep||' \u2192 '); }
+function escapeHtml(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtSec(ms){ return (ms/1000).toFixed(1)+'s'; }
+
+/* ============================= CONFIG POR DEFECTO ============================= */
+function defaultTree(){
+  return [{"id": "background", "label": "Background", "children": [{"id": "background/general", "label": "General", "children": [{"id": "background/general/soft", "label": "Soft", "children": []}, {"id": "background/general/medium", "label": "Medium", "children": []}, {"id": "background/general/bold", "label": "Bold", "children": []}, {"id": "background/general/base", "label": "Base", "children": []}]}, {"id": "background/brand", "label": "Brand", "children": [{"id": "background/brand/primary", "label": "Primary", "children": [{"id": "background/brand/primary/fibra", "label": "Fibra", "children": [{"id": "background/brand/primary/fibra/bold", "label": "Bold", "children": []}]}, {"id": "background/brand/primary/flow", "label": "Flow", "children": [{"id": "background/brand/primary/flow/soft", "label": "Soft", "children": []}, {"id": "background/brand/primary/flow/medium", "label": "Medium", "children": []}, {"id": "background/brand/primary/flow/bold", "label": "Bold", "children": []}]}, {"id": "background/brand/primary/personal", "label": "Personal", "children": [{"id": "background/brand/primary/personal/soft", "label": "Soft", "children": []}, {"id": "background/brand/primary/personal/medium", "label": "Medium", "children": []}, {"id": "background/brand/primary/personal/bold", "label": "Bold", "children": []}]}, {"id": "background/brand/primary/ppay", "label": "Ppay", "children": [{"id": "background/brand/primary/ppay/soft", "label": "Soft", "children": []}, {"id": "background/brand/primary/ppay/medium", "label": "Medium", "children": []}, {"id": "background/brand/primary/ppay/bold", "label": "Bold", "children": []}]}, {"id": "background/brand/primary/pymes", "label": "Pymes", "children": [{"id": "background/brand/primary/pymes/bold", "label": "Bold", "children": []}]}, {"id": "background/brand/primary/smarthome", "label": "Smarthome", "children": [{"id": "background/brand/primary/smarthome/bold", "label": "Bold", "children": []}]}, {"id": "background/brand/primary/tech", "label": "Tech", "children": [{"id": "background/brand/primary/tech/bold", "label": "Bold", "children": []}]}]}, {"id": "background/brand/secondary", "label": "Secondary", "children": [{"id": "background/brand/secondary/soft", "label": "Soft", "children": []}, {"id": "background/brand/secondary/medium", "label": "Medium", "children": []}, {"id": "background/brand/secondary/bold", "label": "Bold", "children": []}]}, {"id": "background/brand/tertiary", "label": "Tertiary", "children": [{"id": "background/brand/tertiary/soft", "label": "Soft", "children": []}, {"id": "background/brand/tertiary/medium", "label": "Medium", "children": []}, {"id": "background/brand/tertiary/bold", "label": "Bold", "children": []}]}]}, {"id": "background/feedback", "label": "Feedback", "children": [{"id": "background/feedback/error", "label": "Error", "children": [{"id": "background/feedback/error/soft", "label": "Soft", "children": []}, {"id": "background/feedback/error/bold", "label": "Bold", "children": []}]}, {"id": "background/feedback/informative", "label": "Informative", "children": [{"id": "background/feedback/informative/soft", "label": "Soft", "children": []}, {"id": "background/feedback/informative/bold", "label": "Bold", "children": []}]}, {"id": "background/feedback/neutral", "label": "Neutral", "children": [{"id": "background/feedback/neutral/soft", "label": "Soft", "children": []}, {"id": "background/feedback/neutral/bold", "label": "Bold", "children": []}]}, {"id": "background/feedback/success", "label": "Success", "children": [{"id": "background/feedback/success/soft", "label": "Soft", "children": []}, {"id": "background/feedback/success/bold", "label": "Bold", "children": []}]}, {"id": "background/feedback/warning", "label": "Warning", "children": [{"id": "background/feedback/warning/soft", "label": "Soft", "children": []}, {"id": "background/feedback/warning/bold", "label": "Bold", "children": []}]}]}, {"id": "background/interactive", "label": "Interactive", "children": [{"id": "background/interactive/primary", "label": "Primary", "children": [{"id": "background/interactive/primary/hovered", "label": "Hovered", "children": []}, {"id": "background/interactive/primary/pressed", "label": "Pressed", "children": []}, {"id": "background/interactive/primary/disabled", "label": "Disabled", "children": []}, {"id": "background/interactive/primary/selected", "label": "Selected", "children": []}]}]}, {"id": "background/arrow", "label": "Arrow", "children": [{"id": "background/arrow/enabled", "label": "Enabled", "children": []}, {"id": "background/arrow/hovered", "label": "Hovered", "children": []}, {"id": "background/arrow/pressed", "label": "Pressed", "children": []}, {"id": "background/arrow/disabled", "label": "Disabled", "children": []}]}, {"id": "background/backdrop", "label": "Backdrop", "children": [{"id": "background/backdrop/soft", "label": "Soft", "children": []}, {"id": "background/backdrop/bold", "label": "Bold", "children": []}]}, {"id": "background/badge", "label": "Badge", "children": [{"id": "background/badge/soft", "label": "Soft", "children": []}, {"id": "background/badge/bold", "label": "Bold", "children": []}]}, {"id": "background/button", "label": "Button", "children": [{"id": "background/button/primary", "label": "Primary", "children": [{"id": "background/button/primary/enabled", "label": "Enabled", "children": []}, {"id": "background/button/primary/hovered", "label": "Hovered", "children": []}, {"id": "background/button/primary/pressed", "label": "Pressed", "children": []}, {"id": "background/button/primary/disabled", "label": "Disabled", "children": []}]}, {"id": "background/button/secondary", "label": "Secondary", "children": [{"id": "background/button/secondary/hovered", "label": "Hovered", "children": []}, {"id": "background/button/secondary/pressed", "label": "Pressed", "children": []}]}, {"id": "background/button/tertiary", "label": "Tertiary", "children": [{"id": "background/button/tertiary/hovered", "label": "Hovered", "children": []}, {"id": "background/button/tertiary/pressed", "label": "Pressed", "children": []}]}, {"id": "background/button/inverse", "label": "Inverse", "children": [{"id": "background/button/inverse/primary", "label": "Primary", "children": [{"id": "background/button/inverse/primary/enabled", "label": "Enabled", "children": []}, {"id": "background/button/inverse/primary/hovered", "label": "Hovered", "children": []}, {"id": "background/button/inverse/primary/pressed", "label": "Pressed", "children": []}, {"id": "background/button/inverse/primary/disabled", "label": "Disabled", "children": []}]}, {"id": "background/button/inverse/secondary", "label": "Secondary", "children": [{"id": "background/button/inverse/secondary/hovered", "label": "Hovered", "children": []}, {"id": "background/button/inverse/secondary/pressed", "label": "Pressed", "children": []}]}, {"id": "background/button/inverse/tertiary", "label": "Tertiary", "children": [{"id": "background/button/inverse/tertiary/hovered", "label": "Hovered", "children": []}, {"id": "background/button/inverse/tertiary/pressed", "label": "Pressed", "children": []}]}]}]}, {"id": "background/chip", "label": "Chip", "children": [{"id": "background/chip/enabled", "label": "Enabled", "children": []}, {"id": "background/chip/hovered", "label": "Hovered", "children": []}, {"id": "background/chip/pressed", "label": "Pressed", "children": []}, {"id": "background/chip/disabled", "label": "Disabled", "children": []}, {"id": "background/chip/selected", "label": "Selected", "children": [{"id": "background/chip/selected/enabled", "label": "Enabled", "children": []}, {"id": "background/chip/selected/hovered", "label": "Hovered", "children": []}, {"id": "background/chip/selected/pressed", "label": "Pressed", "children": []}]}]}, {"id": "background/controls", "label": "Controls", "children": [{"id": "background/controls/enabled", "label": "Enabled", "children": []}, {"id": "background/controls/hovered", "label": "Hovered", "children": []}, {"id": "background/controls/pressed", "label": "Pressed", "children": []}, {"id": "background/controls/disabled", "label": "Disabled", "children": []}, {"id": "background/controls/dot", "label": "Dot", "children": [{"id": "background/controls/dot/selected", "label": "Selected", "children": []}, {"id": "background/controls/dot/unselected", "label": "Unselected", "children": []}]}, {"id": "background/controls/toggle", "label": "Toggle", "children": [{"id": "background/controls/toggle/circle-disabled", "label": "Circle-disabled", "children": []}, {"id": "background/controls/toggle/circle-enabled", "label": "Circle-enabled", "children": []}, {"id": "background/controls/toggle/disabled", "label": "Disabled", "children": []}, {"id": "background/controls/toggle/off-enabled", "label": "Off-enabled", "children": []}, {"id": "background/controls/toggle/off-hovered", "label": "Off-hovered", "children": []}, {"id": "background/controls/toggle/off-pressed", "label": "Off-pressed", "children": []}, {"id": "background/controls/toggle/on-enabled", "label": "On-enabled", "children": []}, {"id": "background/controls/toggle/on-hovered", "label": "On-hovered", "children": []}, {"id": "background/controls/toggle/on-pressed", "label": "On-pressed", "children": []}]}]}, {"id": "background/flag", "label": "Flag", "children": [{"id": "background/flag/primary", "label": "Primary", "children": [{"id": "background/flag/primary/soft", "label": "Soft", "children": []}, {"id": "background/flag/primary/bold", "label": "Bold", "children": []}]}, {"id": "background/flag/secondary", "label": "Secondary", "children": [{"id": "background/flag/secondary/soft", "label": "Soft", "children": []}, {"id": "background/flag/secondary/bold", "label": "Bold", "children": []}]}, {"id": "background/flag/tertiary", "label": "Tertiary", "children": [{"id": "background/flag/tertiary/soft", "label": "Soft", "children": []}, {"id": "background/flag/tertiary/bold", "label": "Bold", "children": []}]}]}, {"id": "background/flagribbon", "label": "Flagribbon", "children": [{"id": "background/flagribbon/flow", "label": "Flow", "children": [{"id": "background/flagribbon/flow/primary", "label": "Primary", "children": [{"id": "background/flagribbon/flow/primary/soft", "label": "Soft", "children": []}, {"id": "background/flagribbon/flow/primary/bold", "label": "Bold", "children": []}]}]}, {"id": "background/flagribbon/neutral", "label": "Neutral", "children": []}, {"id": "background/flagribbon/personal", "label": "Personal", "children": [{"id": "background/flagribbon/personal/primary", "label": "Primary", "children": [{"id": "background/flagribbon/personal/primary/soft", "label": "Soft", "children": []}, {"id": "background/flagribbon/personal/primary/bold", "label": "Bold", "children": []}]}]}, {"id": "background/flagribbon/secondary", "label": "Secondary", "children": [{"id": "background/flagribbon/secondary/soft", "label": "Soft", "children": []}, {"id": "background/flagribbon/secondary/bold", "label": "Bold", "children": []}]}, {"id": "background/flagribbon/tertiary", "label": "Tertiary", "children": [{"id": "background/flagribbon/tertiary/soft", "label": "Soft", "children": []}, {"id": "background/flagribbon/tertiary/bold", "label": "Bold", "children": []}]}]}, {"id": "background/floating", "label": "Floating", "children": [{"id": "background/floating/soft", "label": "Soft", "children": []}, {"id": "background/floating/bold", "label": "Bold", "children": []}]}, {"id": "background/on", "label": "On", "children": [{"id": "background/on/chip", "label": "Chip", "children": [{"id": "background/on/chip/enabled", "label": "Enabled", "children": []}]}]}, {"id": "background/scrollbar", "label": "Scrollbar", "children": [{"id": "background/scrollbar/primary", "label": "Primary", "children": [{"id": "background/scrollbar/primary/enabled", "label": "Enabled", "children": []}, {"id": "background/scrollbar/primary/hovered", "label": "Hovered", "children": []}]}]}, {"id": "background/tab", "label": "Tab", "children": [{"id": "background/tab/indicator", "label": "Indicator", "children": []}]}, {"id": "background/tag", "label": "Tag", "children": [{"id": "background/tag/primary", "label": "Primary", "children": [{"id": "background/tag/primary/soft", "label": "Soft", "children": []}, {"id": "background/tag/primary/bold", "label": "Bold", "children": []}]}, {"id": "background/tag/secondary", "label": "Secondary", "children": [{"id": "background/tag/secondary/soft", "label": "Soft", "children": []}, {"id": "background/tag/secondary/bold", "label": "Bold", "children": []}]}, {"id": "background/tag/tertiary", "label": "Tertiary", "children": [{"id": "background/tag/tertiary/soft", "label": "Soft", "children": []}, {"id": "background/tag/tertiary/bold", "label": "Bold", "children": []}]}]}]}, {"id": "text-icon", "label": "Text-icon", "children": [{"id": "text-icon/general", "label": "General", "children": [{"id": "text-icon/general/disabled", "label": "Disabled", "children": [{"id": "text-icon/general/disabled/soft", "label": "Soft", "children": []}, {"id": "text-icon/general/disabled/medium", "label": "Medium", "children": []}]}, {"id": "text-icon/general/heading", "label": "Heading", "children": []}, {"id": "text-icon/general/info", "label": "Info", "children": []}, {"id": "text-icon/general/inverse", "label": "Inverse", "children": [{"id": "text-icon/general/inverse/disabled", "label": "Disabled", "children": [{"id": "text-icon/general/inverse/disabled/soft", "label": "Soft", "children": []}, {"id": "text-icon/general/inverse/disabled/medium", "label": "Medium", "children": []}]}, {"id": "text-icon/general/inverse/heading", "label": "Heading", "children": []}, {"id": "text-icon/general/inverse/info", "label": "Info", "children": []}, {"id": "text-icon/general/inverse/paragraph", "label": "Paragraph", "children": []}, {"id": "text-icon/general/inverse/placeholder", "label": "Placeholder", "children": []}]}, {"id": "text-icon/general/paragraph", "label": "Paragraph", "children": []}, {"id": "text-icon/general/placeholder", "label": "Placeholder", "children": []}]}, {"id": "text-icon/brand", "label": "Brand", "children": [{"id": "text-icon/brand/inverse", "label": "Inverse", "children": [{"id": "text-icon/brand/inverse/primary", "label": "Primary", "children": [{"id": "text-icon/brand/inverse/primary/fibra", "label": "Fibra", "children": []}, {"id": "text-icon/brand/inverse/primary/flow", "label": "Flow", "children": [{"id": "text-icon/brand/inverse/primary/flow/soft", "label": "Soft", "children": []}, {"id": "text-icon/brand/inverse/primary/flow/bold", "label": "Bold", "children": []}]}, {"id": "text-icon/brand/inverse/primary/personal", "label": "Personal", "children": [{"id": "text-icon/brand/inverse/primary/personal/soft", "label": "Soft", "children": []}, {"id": "text-icon/brand/inverse/primary/personal/bold", "label": "Bold", "children": []}]}, {"id": "text-icon/brand/inverse/primary/ppay", "label": "Ppay", "children": []}]}, {"id": "text-icon/brand/inverse/secondary", "label": "Secondary", "children": [{"id": "text-icon/brand/inverse/secondary/soft", "label": "Soft", "children": []}, {"id": "text-icon/brand/inverse/secondary/bold", "label": "Bold", "children": []}]}, {"id": "text-icon/brand/inverse/tertiary", "label": "Tertiary", "children": [{"id": "text-icon/brand/inverse/tertiary/soft", "label": "Soft", "children": []}]}]}, {"id": "text-icon/brand/primary", "label": "Primary", "children": [{"id": "text-icon/brand/primary/fibra", "label": "Fibra", "children": []}, {"id": "text-icon/brand/primary/flow", "label": "Flow", "children": [{"id": "text-icon/brand/primary/flow/soft", "label": "Soft", "children": []}, {"id": "text-icon/brand/primary/flow/bold", "label": "Bold", "children": []}]}, {"id": "text-icon/brand/primary/personal", "label": "Personal", "children": [{"id": "text-icon/brand/primary/personal/soft", "label": "Soft", "children": []}, {"id": "text-icon/brand/primary/personal/bold", "label": "Bold", "children": []}]}, {"id": "text-icon/brand/primary/ppay", "label": "Ppay", "children": []}]}, {"id": "text-icon/brand/secondary", "label": "Secondary", "children": [{"id": "text-icon/brand/secondary/soft", "label": "Soft", "children": []}, {"id": "text-icon/brand/secondary/bold", "label": "Bold", "children": []}]}, {"id": "text-icon/brand/tertiary", "label": "Tertiary", "children": [{"id": "text-icon/brand/tertiary/bold", "label": "Bold", "children": []}]}]}, {"id": "text-icon/feedback", "label": "Feedback", "children": [{"id": "text-icon/feedback/error", "label": "Error", "children": []}, {"id": "text-icon/feedback/iinverse", "label": "Iinverse", "children": [{"id": "text-icon/feedback/iinverse/informative", "label": "Informative", "children": []}]}, {"id": "text-icon/feedback/informative", "label": "Informative", "children": []}, {"id": "text-icon/feedback/inverse", "label": "Inverse", "children": [{"id": "text-icon/feedback/inverse/error", "label": "Error", "children": []}, {"id": "text-icon/feedback/inverse/informative", "label": "Informative", "children": []}, {"id": "text-icon/feedback/inverse/mandatory", "label": "Mandatory", "children": []}, {"id": "text-icon/feedback/inverse/success", "label": "Success", "children": []}, {"id": "text-icon/feedback/inverse/warning", "label": "Warning", "children": []}]}, {"id": "text-icon/feedback/mandatory", "label": "Mandatory", "children": []}, {"id": "text-icon/feedback/success", "label": "Success", "children": []}, {"id": "text-icon/feedback/warning", "label": "Warning", "children": []}]}, {"id": "text-icon/interactive", "label": "Interactive", "children": [{"id": "text-icon/interactive/enabled", "label": "Enabled", "children": []}, {"id": "text-icon/interactive/hovered", "label": "Hovered", "children": []}, {"id": "text-icon/interactive/neutral", "label": "Neutral", "children": [{"id": "text-icon/interactive/neutral/enabled", "label": "Enabled", "children": []}, {"id": "text-icon/interactive/neutral/hovered", "label": "Hovered", "children": []}, {"id": "text-icon/interactive/neutral/selected", "label": "Selected", "children": []}, {"id": "text-icon/interactive/neutral/visited", "label": "Visited", "children": []}]}, {"id": "text-icon/interactive/selected", "label": "Selected", "children": []}, {"id": "text-icon/interactive/visited", "label": "Visited", "children": []}, {"id": "text-icon/interactive/inverse", "label": "Inverse", "children": [{"id": "text-icon/interactive/inverse/enabled", "label": "Enabled", "children": []}, {"id": "text-icon/interactive/inverse/hovered", "label": "Hovered", "children": []}, {"id": "text-icon/interactive/inverse/selected", "label": "Selected", "children": []}, {"id": "text-icon/interactive/inverse/visited", "label": "Visited", "children": []}]}]}, {"id": "text-icon/on", "label": "On", "children": [{"id": "text-icon/on/badge", "label": "Badge", "children": [{"id": "text-icon/on/badge/soft", "label": "Soft", "children": []}, {"id": "text-icon/on/badge/bold", "label": "Bold", "children": []}]}, {"id": "text-icon/on/button", "label": "Button", "children": [{"id": "text-icon/on/button/primary", "label": "Primary", "children": [{"id": "text-icon/on/button/primary/enabled", "label": "Enabled", "children": []}, {"id": "text-icon/on/button/primary/disabled", "label": "Disabled", "children": []}]}, {"id": "text-icon/on/button/secondary", "label": "Secondary", "children": [{"id": "text-icon/on/button/secondary/enabled", "label": "Enabled", "children": []}, {"id": "text-icon/on/button/secondary/disabled", "label": "Disabled", "children": []}]}, {"id": "text-icon/on/button/tertiary", "label": "Tertiary", "children": [{"id": "text-icon/on/button/tertiary/enabled", "label": "Enabled", "children": []}, {"id": "text-icon/on/button/tertiary/disabled", "label": "Disabled", "children": []}]}, {"id": "text-icon/on/button/inverse", "label": "Inverse", "children": [{"id": "text-icon/on/button/inverse/primary", "label": "Primary", "children": [{"id": "text-icon/on/button/inverse/primary/enabled", "label": "Enabled", "children": []}, {"id": "text-icon/on/button/inverse/primary/disabled", "label": "Disabled", "children": []}]}, {"id": "text-icon/on/button/inverse/secondary", "label": "Secondary", "children": [{"id": "text-icon/on/button/inverse/secondary/enabled", "label": "Enabled", "children": []}, {"id": "text-icon/on/button/inverse/secondary/disabled", "label": "Disabled", "children": []}]}, {"id": "text-icon/on/button/inverse/tertiary", "label": "Tertiary", "children": [{"id": "text-icon/on/button/inverse/tertiary/enabled", "label": "Enabled", "children": []}, {"id": "text-icon/on/button/inverse/tertiary/disabled", "label": "Disabled", "children": []}]}]}]}, {"id": "text-icon/on/chip", "label": "Chip", "children": [{"id": "text-icon/on/chip/enabled", "label": "Enabled", "children": []}, {"id": "text-icon/on/chip/hovered", "label": "Hovered", "children": []}, {"id": "text-icon/on/chip/enabled-remove", "label": "Enabled-remove", "children": []}, {"id": "text-icon/on/chip/selected", "label": "Selected", "children": []}, {"id": "text-icon/on/chip/selected-remove", "label": "Selected-remove", "children": []}]}]}]}];
+}
+function defaultTasks(tree){
+  return [{"id": "background/general/soft", "prompt": "Tenés que aplicar el color de fondo del contenedor principal de la página, la primera capa sobre la que se apoya el resto de los elementos de la interfaz. ¿Qué token elegirías?", "hex": "#faf9fb", "correctNodeId": "background/general/soft"}, {"id": "background/button/primary/hovered", "prompt": "Este es el fondo de un botón primario cuando el mouse pasa por encima (estado hover). ¿Dónde lo buscarías?", "hex": "#0050b1", "correctNodeId": "background/button/primary/hovered"}, {"id": "background/feedback/error/bold", "prompt": "Este es el fondo sólido de un mensaje de error. ¿Dónde buscarías el token para este color?", "hex": "#ba1b1b", "correctNodeId": "background/feedback/error/bold"}, {"id": "background/brand/primary/personal/bold", "prompt": "Este es el color de una superficie destacada asociada a la marca Personal (no Flow, no Ppay). ¿Dónde lo buscarías?", "hex": "#0171e4", "correctNodeId": "background/brand/primary/personal/bold"}, {"id": "text-icon/general/disabled/soft", "prompt": "Este es el color de un texto deshabilitado en tamaño mínimo que necesita menor contraste (la variante suave, no la más marcada). ¿Dónde buscarías este token?", "hex": "#c8c6ca", "correctNodeId": "text-icon/general/disabled/soft"}, {"id": "text-icon/interactive/hovered", "prompt": "Este es el color de un link de texto cuando el mouse pasa por encima. ¿Dónde lo buscarías?", "hex": "#00407f", "correctNodeId": "text-icon/interactive/hovered"}, {"id": "text-icon/on/button/inverse/primary/enabled", "prompt": "Este es el color del texto que va arriba de un botón primario 'inverse' (el botón usado sobre fondos oscuros), en su estado habilitado. ¿Dónde buscarías este token?", "hex": "#222222", "correctNodeId": "text-icon/on/button/inverse/primary/enabled"}, {"id": "background/flagribbon/personal/primary/soft", "prompt": "Este es el color de fondo de una cinta (flag ribbon) de la marca Personal, con énfasis suave. ¿Dónde lo buscarías?", "hex": "#c8eeff", "correctNodeId": "background/flagribbon/personal/primary/soft"}];
+}
+const CONFIG_VERSION = 12; // subir este número fuerza a todos los navegadores a recibir el árbol/tareas más nuevos
+function makeDefaultConfig(){
+  const tree = defaultTree();
+  return { version: CONFIG_VERSION, tree, tasks: defaultTasks(tree) };
+}
+
+/* ============================= STORAGE ============================= */
+async function loadConfig(){
+  try{
+    const res = await window.storage.get('tt-config', true);
+    if(res && res.value) return JSON.parse(res.value);
+  }catch(e){ /* no existe todavía */ }
+  return null;
+}
+async function saveConfigRemote(cfg){
+  try{ await window.storage.set('tt-config', JSON.stringify(cfg), true); return true; }
+  catch(e){ console.error('saveConfig error', e); return false; }
+}
+async function saveResultRemote(result){
+  try{ await window.storage.set('tt-result:'+result.id, JSON.stringify(result), true); return true; }
+  catch(e){ console.error('saveResult error', e); return false; }
+}
+async function loadAllResults(){
+  try{
+    const list = await window.storage.list('tt-result:', true);
+    if(!list || !list.keys) return [];
+    const items = [];
+    for(const k of list.keys){
+      try{
+        const r = await window.storage.get(k, true);
+        if(r && r.value) items.push(JSON.parse(r.value));
+      }catch(e){ /* skip */ }
+    }
+    return items;
+  }catch(e){ return []; }
+}
+async function clearAllResults(){
+  try{
+    let list = await window.storage.list('tt-result:', true);
+    let keys = (list && list.keys) ? list.keys : [];
+    for(const k of keys){
+      try{ await window.storage.delete(k, true); }catch(e){ console.error('delete failed', k, e); }
+    }
+    // reintento por si alguna key quedó (ej: fallo de red puntual)
+    let check = await window.storage.list('tt-result:', true);
+    let remaining = (check && check.keys) ? check.keys : [];
+    if(remaining.length){
+      for(const k of remaining){
+        try{ await window.storage.delete(k, true); }catch(e){ console.error('retry delete failed', k, e); }
+      }
+      check = await window.storage.list('tt-result:', true);
+      remaining = (check && check.keys) ? check.keys : [];
+    }
+    return { ok: remaining.length === 0, remaining: remaining.length };
+  }catch(e){
+    console.error('clearAllResults error', e);
+    return { ok:false, remaining:-1 };
+  }
+}
+
+/* ============================= DIÁLOGOS PROPIOS (no dependen de confirm()/alert() del navegador) ============================= */
+function askConfirm(message, actionOnYes){
+  state.confirmDialog = { message, actionOnYes };
+  render();
+}
+function showToast(text, kind){
+  state.toast = { text, kind: kind || 'info' };
+  render();
+}
+
+/* ============================= ESTADO ============================= */
+const ADMIN_ACCESS_CODE = 'TokenTest2026';
+const state = {
+  role: null,               // null | 'admin' | 'participant'
+  adminTab: 'results',      // 'tree' | 'tasks' | 'results'
+  configLoaded: false,
+  config: makeDefaultConfig(),
+  saving:false,
+  resultsState: { loading:false, loaded:false, items:[] },
+  showJsonModal:false,
+  confirmDialog:null,   // { message, actionOnYes } — reemplaza a window.confirm (bloqueado en algunos entornos embebidos)
+  toast:null,           // { text, kind } — reemplaza a window.alert
+  adminGate:{ open:false, error:null }, // pantalla de código de acceso antes de entrar como administrador
+  participantAccordion:{},  // { [resultId]: true/false } — qué acordeones de participantes están abiertos
+  test: null,               // objeto de sesión de test del participante
+};
+
+async function ensureConfigLoaded(){
+  if(state.configLoaded) return;
+  const remote = await loadConfig();
+  if(remote && remote.tree && remote.version === CONFIG_VERSION){
+    state.config = remote;
+  }else{
+    // no había config guardada, o es una versión vieja (de una nomenclatura anterior): se reemplaza por la actual
+    state.config = makeDefaultConfig();
+    await saveConfigRemote(state.config);
+  }
+  state.configLoaded = true;
+}
+
+async function persistConfig(){
+  state.saving = true; render();
+  await saveConfigRemote(state.config);
+  state.saving = false; render();
+}
+
+/* ============================= TEST — LÓGICA ============================= */
+function startTest(participantName){
+  state.test = {
+    id: uid(),
+    participant: participantName || '',
+    taskIndex: 0,
+    path: [],           // ids desde la raíz para la tarea actual
+    backtracks: 0,
+    clickCount: 0,
+    startTime: Date.now(),
+    firstClickId: null,
+    perTask: [],         // resultados acumulados
+    done:false,
+  };
+  render();
+}
+
+function currentTaskLevel(){
+  const t = state.test;
+  let level = state.config.tree;
+  for(const id of t.path){
+    const node = level.find(n => n.id === id);
+    if(!node) break;
+    level = node.children || [];
+  }
+  return level;
+}
+function currentTaskNodePath(){
+  const t = state.test;
+  const nodes = [];
+  let level = state.config.tree;
+  for(const id of t.path){
+    const node = level.find(n => n.id === id);
+    if(!node) break;
+    nodes.push(node);
+    level = node.children || [];
+  }
+  return nodes;
+}
+
+function drillInto(nodeId){
+  const t = state.test;
+  if(t.firstClickId === null) t.firstClickId = nodeId;
+  t.path.push(nodeId);
+  t.clickCount++;
+  render();
+}
+function goBack(){
+  const t = state.test;
+  if(t.path.length === 0) return;
+  t.path.pop();
+  t.backtracks++;
+  t.clickCount++;
+  render();
+}
+
+function confirmAnswer(){
+  const t = state.test;
+  const task = state.config.tasks[t.taskIndex];
+  const pathNodes = currentTaskNodePath();
+  const finalId = pathNodes.length ? pathNodes[pathNodes.length-1].id : null;
+  const durationMs = Date.now() - t.startTime;
+  const success = !!finalId && finalId === task.correctNodeId;
+
+  let correctPathNodes = [];
+  if(task.correctNodeId){
+    const fp = findNode(state.config.tree, task.correctNodeId);
+    if(fp) correctPathNodes = fp;
+  }
+  const firstClickCorrect = correctPathNodes.length && t.firstClickId === correctPathNodes[0].id;
+
+  t.perTask.push({
+    taskId: task.id,
+    prompt: task.prompt,
+    finalNodeId: finalId,
+    finalLabelPath: labelPath(pathNodes),
+    finalTokenPath: tokenPath(pathNodes),
+    correctNodeId: task.correctNodeId,
+    correctLabelPath: labelPath(correctPathNodes),
+    correctTokenPath: tokenPath(correctPathNodes),
+    success,
+    firstClickCorrect: !!firstClickCorrect,
+    backtracks: t.backtracks,
+    clicks: t.clickCount,
+    durationMs,
+  });
+
+  const nextIndex = t.taskIndex + 1;
+  if(nextIndex >= state.config.tasks.length){
+    finishTest();
+  }else{
+    t.taskIndex = nextIndex;
+    t.path = [];
+    t.backtracks = 0;
+    t.clickCount = 0;
+    t.firstClickId = null;
+    t.startTime = Date.now();
+    render();
+  }
+}
+
+async function finishTest(){
+  const t = state.test;
+  t.done = true;
+  render();
+  const record = {
+    id: t.id,
+    participant: t.participant,
+    submittedAt: Date.now(),
+    perTask: t.perTask,
+  };
+  await saveResultRemote(record);
+}
+
+/* ============================= RESULTADOS — AGREGACIÓN ============================= */
+async function ensureResultsLoaded(force){
+  if(state.resultsState.loaded && !force) return;
+  state.resultsState.loading = true; render();
+  const items = await loadAllResults();
+  state.resultsState.items = items;
+  state.resultsState.loading = false;
+  state.resultsState.loaded = true;
+  render();
+}
+
+function computeParticipantLabelMap(items){
+  const orderedItems = [...items].sort((a,b) => (a.submittedAt||0) - (b.submittedAt||0));
+  const nameCounts = {};
+  orderedItems.forEach(it => {
+    const trimmed = it.participant ? it.participant.trim() : '';
+    if(trimmed) nameCounts[trimmed] = (nameCounts[trimmed]||0) + 1;
+  });
+  const nameSeen = {};
+  const map = {};
+  orderedItems.forEach((it, idx) => {
+    const trimmed = it.participant ? it.participant.trim() : '';
+    if(!trimmed){
+      map[it.id] = 'Usuario ' + (idx + 1);
+    }else if(nameCounts[trimmed] > 1){
+      nameSeen[trimmed] = (nameSeen[trimmed]||0) + 1;
+      map[it.id] = `${trimmed} (envío ${nameSeen[trimmed]})`;
+    }else{
+      map[it.id] = trimmed;
+    }
+  });
+  return { map, orderedItems };
+}
+
+function statusForAnswer(task, finalNodeId){
+  if(!task.correctNodeId) return 'wrong';
+  if(finalNodeId === task.correctNodeId) return 'correct';
+  if(finalNodeId){
+    const correctParent = task.correctNodeId.split('/').slice(0,-1).join('/');
+    const candidateParent = finalNodeId.split('/').slice(0,-1).join('/');
+    if(candidateParent && candidateParent === correctParent) return 'close';
+  }
+  return 'wrong';
+}
+
+function aggregateResults(){
+  const items = state.resultsState.items;
+  const { map } = computeParticipantLabelMap(items);
+  const tasks = state.config.tasks;
+  let overallSuccess = 0, overallN = 0;
+  items.forEach(it => (it.perTask||[]).forEach(pt => {
+    const task = tasks.find(t => t.id === pt.taskId);
+    if(!task) return;
+    overallN++;
+    if(pt.success) overallSuccess++;
+  }));
+  return { totalParticipants: items.length, overallRate: overallN ? overallSuccess/overallN : 0, labelMap: map };
+}
+
+function buildParticipantSummaries(){
+  const items = state.resultsState.items;
+  const tasks = state.config.tasks;
+  const { map, orderedItems } = computeParticipantLabelMap(items);
+  return orderedItems.map(it => {
+    const rows = tasks.map((task, idx) => {
+      const pt = (it.perTask||[]).find(p => p.taskId === task.id);
+      if(!pt){
+        return { taskIndex: idx, answered: false };
+      }
+      const status = statusForAnswer(task, pt.finalNodeId);
+      return {
+        taskIndex: idx,
+        answered: true,
+        theirLabel: pt.finalLabelPath || '(sin respuesta)',
+        correctTokenPath: task.correctNodeId ? tokenPathForNode(task.correctNodeId) : '—',
+        status,
+        durationMs: pt.durationMs, clicks: pt.clicks, backtracks: pt.backtracks,
+      };
+    });
+    const answeredRows = rows.filter(r => r.answered);
+    const successCount = answeredRows.filter(r => r.status === 'correct').length;
+    return {
+      id: it.id,
+      label: map[it.id],
+      submittedAt: it.submittedAt,
+      total: answeredRows.length,
+      successCount,
+      successRate: answeredRows.length ? successCount/answeredRows.length : 0,
+      rows,
+    };
+  });
+}
+
+/* ============================= RENDER: HELPERS DE UI ============================= */
+function renderTokenTrail(pathNodes, opts){
+  opts = opts || {};
+  const segs = pathNodes.map(n => `<span class="seg">${escapeHtml(slugify(n.label))}</span>`);
+  const joined = segs.join('<span class="sep">/</span>');
+  return `<div class="token-trail">${joined || '<span style="color:var(--ink-soft);font-weight:600;">raíz</span>'}${opts.cursor?'<span class="cursor"></span>':''}</div>`;
+}
+
+/* ============================= RENDER: PANTALLAS ============================= */
+function renderHomeScreen(){
+  return `
+  <div class="topbar">
+    <div class="brand"><div class="brand-mark"></div><div><h1>Tree Test de tokens</h1><p class="muted">Validá si tu equipo encuentra los tokens de color por su nombre</p></div></div>
+    <button class="btn btn-sm btn-outline-blue" data-action="go-admin">Ingresa como admin</button>
+  </div>
+  <div class="card" style="padding:24px;">
+    <p style="font-size:15px;line-height:1.55;color:var(--ink-soft);font-weight:400;">Este ejercicio muestra un color a la persona participante y le pide que navegue el árbol de nomenclatura (sin buscador, sin ver el color real del token) hasta encontrar dónde estaría ese token. Así medimos si los nombres actuales son fáciles de encontrar.</p>
+    <div style="margin-top:12px;">${renderTokenTrail([{label:'background'},{label:'primary'},{label:'hover'}])}</div>
+  </div>
+  <div class="card" style="padding:26px;">
+    <h2>Cómo funciona</h2>
+    <p class="muted" style="margin:10px 0 16px;">Vas a ver ${state.config.tasks.length} colores, uno por vez, con una breve descripción de dónde se usan. Tu tarea es navegar las categorías hasta encontrar dónde crees que estaría ese token — como si buscaras en una carpeta, sin buscador. No hay respuestas "lindas" ni "feas": solo nos interesa si el nombre es fácil o difícil de encontrar.</p>
+    <div class="field-row" style="max-width:320px;">
+      <label class="field-label" for="pname">Tu nombre o alias (opcional)</label>
+      <input type="text" id="pname" placeholder="Ej: Ana - UX">
+    </div>
+    <button class="btn btn-primary" data-action="begin-test">Empezar ejercicio</button>
+  </div>`;
+}
+
+function renderAdminGate(){
+  const err = state.adminGate.error;
+  return `
+  <div class="topbar">
+    <div class="brand"><div class="brand-mark"></div><div><h1>Acceso de administrador</h1><p class="muted">Ingresá el código para configurar el árbol, las tareas o ver resultados</p></div></div>
+  </div>
+  <div class="card" style="padding:26px;max-width:400px;">
+    <div class="field-row">
+      <label class="field-label" for="admin-code">Código de acceso</label>
+      <input type="password" id="admin-code" placeholder="Código de acceso" autocomplete="off" style="padding:13px 14px;font-size:15px;${err?'border-color:var(--error);':''}">
+      ${err ? `<p style="color:var(--error);font-size:12.5px;margin-top:6px;">${escapeHtml(err)}</p>` : ''}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn btn-ghost" data-action="admin-gate-cancel">Cancelar</button>
+      <button class="btn btn-accent-blue" data-action="admin-gate-submit">Ingresar</button>
+    </div>
+  </div>`;
+}
+
+/* ---- ADMIN: shell ---- */
+function renderAdminShell(inner){
+  const headerAction = state.adminTab === 'tasks'
+    ? '<button class="btn btn-sm btn-accent-blue" data-action="add-task">+ Nueva tarea</button>'
+    : state.adminTab === 'results'
+      ? '<button class="btn btn-sm btn-accent-blue" data-action="clear-results">Reset resultados</button>'
+      : '';
+  return `
+  <div class="topbar">
+    <div class="brand"><div class="brand-mark"></div><div><h1>Tree Test — Administración</h1><p class="muted">${state.saving?'Guardando…':'Cambios guardados automáticamente'}</p></div></div>
+    <div class="top-actions">
+      <button class="btn btn-sm btn-outline-blue" data-action="go-home">← Inicio</button>
+    </div>
+  </div>
+  <div class="tabs-row" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
+    <div class="tabs">
+      <button class="tab ${state.adminTab==='results'?'active':''}" data-action="tab-results">Resultados</button>
+      <button class="tab ${state.adminTab==='tree'?'active':''}" data-action="tab-tree">Árbol</button>
+      <button class="tab ${state.adminTab==='tasks'?'active':''}" data-action="tab-tasks">Tareas</button>
+    </div>
+    ${headerAction}
+  </div>
+  ${inner}`;
+}
+
+function renderNodeEditor(node, depth){
+  const childCount = node.children.length;
+  return `
+  <div class="node-row" data-node-id="${node.id}">
+    <input type="text" class="node-input" data-field="label" data-node-id="${node.id}" value="${escapeHtml(node.label)}" placeholder="Nombre de la categoría" aria-label="Nombre del nivel">
+    <button class="btn btn-ghost btn-sm" data-action="add-child" data-node-id="${node.id}" title="Agregar subnivel">+ Subnivel</button>
+    <button class="btn btn-ghost btn-sm btn-danger" data-action="delete-node" data-node-id="${node.id}" title="Eliminar">Eliminar</button>
+  </div>
+  ${childCount ? `<div class="node-children">${node.children.map(c=>renderNodeEditor(c, depth+1)).join('')}</div>` : ''}
+  `;
+}
+
+function renderTreeTab(){
+  return renderAdminShell(`
+    <div class="card">
+      <h2>Estructura de nomenclatura</h2>
+      <p class="muted" style="margin-bottom:14px;">Definí las categorías y subniveles como aparecen hoy en tu librería de Figma (ej. Background → Primary → Hover). Este es el árbol que la persona participante va a navegar, sin buscador.</p>
+      <div id="tree-editor-root">
+        ${state.config.tree.map(n=>renderNodeEditor(n,0)).join('') || '<p class="muted">Todavía no hay categorías. Agregá la primera.</p>'}
+      </div>
+      <button class="btn add-root" data-action="add-root">+ Nueva categoría raíz</button>
+    </div>
+    <div class="card">
+      <button class="btn btn-ghost btn-sm" data-action="reset-tree">Restaurar nomenclatura de "Colors" (Figma)</button>
+    </div>
+  `);
+}
+
+function renderTasksTab(){
+  const flat = flattenWithPath(state.config.tree);
+  const optionsHtml = (selectedId) => flat.map(f => `<option value="${f.id}" ${f.id===selectedId?'selected':''}>${escapeHtml(labelPath(f.pathNodes))}</option>`).join('');
+  const tasksHtml = state.config.tasks.map((task, i) => `
+    <div class="task-block">
+      <div class="task-head">
+        <h3>Tarea ${i+1}</h3>
+        <button class="btn btn-ghost btn-sm btn-danger" data-action="delete-task" data-task-id="${task.id}">Eliminar</button>
+      </div>
+      <div class="field-row">
+        <label class="field-label" for="prompt-${task.id}">Consigna para la persona participante</label>
+        <textarea id="prompt-${task.id}" data-field="prompt" data-task-id="${task.id}" placeholder="Ej: Este es el color del fondo cuando el botón primario está deshabilitado. ¿Dónde lo buscarías?">${escapeHtml(task.prompt)}</textarea>
+      </div>
+      <div class="field-row">
+        <label class="field-label" for="hex-${task.id}">Color de referencia (opcional, hex)</label>
+        <div class="swatch-input">
+          <div class="swatch" style="background:${task.hex||'#ffffff'}"></div>
+          <input type="text" id="hex-${task.id}" data-field="hex" data-task-id="${task.id}" value="${escapeHtml(task.hex||'')}" placeholder="#3454D1" style="max-width:140px;">
+        </div>
+      </div>
+      <div class="field-row">
+        <label class="field-label" for="answer-${task.id}">Token correcto en el árbol</label>
+        <select id="answer-${task.id}" data-field="correctNodeId" data-task-id="${task.id}">
+          <option value="">— Elegir —</option>
+          ${optionsHtml(task.correctNodeId)}
+        </select>
+      </div>
+    </div>
+  `).join('');
+
+  return renderAdminShell(`
+    <div class="card">
+      <h2>Tareas del ejercicio</h2>
+      <p class="muted" style="margin-top:4px;margin-bottom:14px;">Cada tarea le muestra a la persona un color (y una descripción de uso) y le pide encontrar el token correspondiente navegando el árbol. Definí cuál es la respuesta correcta para poder medir el éxito.</p>
+      ${tasksHtml || '<p class="muted">Todavía no hay tareas.</p>'}
+    </div>
+  `);
+}
+
+function renderResultsTab(){
+  if(state.resultsState.loading){
+    return renderAdminShell(`<div class="card"><p class="muted">Cargando resultados…</p></div>`);
+  }
+  const items = state.resultsState.items;
+  const toolbar = `
+    <div class="top-actions">
+      <button class="btn btn-sm btn-ghost" data-action="refresh-results">Actualizar</button>
+      ${items.length ? '<button class="btn btn-sm btn-ghost" data-action="export-json">Ver / copiar JSON</button>' : ''}
+    </div>`;
+  if(!items.length){
+    return renderAdminShell(`
+      <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <h2>Resultados</h2>
+        ${toolbar}
+      </div>
+      <div class="card empty-state">
+        <h2>Todavía no hay respuestas</h2>
+        <p class="muted">Compartí el link en modo "Soy participante" con tu equipo. Los resultados van a aparecer acá automáticamente.</p>
+      </div>
+    `);
+  }
+  const agg = aggregateResults();
+  const participants = buildParticipantSummaries();
+  const statusMeta = {
+    correct: { color: 'var(--success)', bg: 'var(--success-bg)', label: 'Correcta' },
+    close:   { color: 'var(--warning)', bg: 'var(--warning-bg)', label: 'Cercana / confusa' },
+    wrong:   { color: 'var(--error)',   bg: 'var(--error-bg)',   label: 'Incorrecta' },
+  };
+  const participantCards = participants.map(p => {
+    const expanded = !!state.participantAccordion[p.id];
+    const rateColor = p.successRate>=0.7?'var(--success)':p.successRate>=0.4?'var(--warning)':'var(--error)';
+    return `
+    <div class="accordion-item">
+      <button class="accordion-header" data-action="toggle-participant" data-participant-id="${p.id}">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+          <span class="chev" style="transform:${expanded?'rotate(90deg)':'none'};">›</span>
+          <span style="font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(p.label)}</span>
+        </div>
+        <span style="font-weight:700;color:${rateColor};flex:0 0 auto;">${p.successCount}/${p.total} correctas</span>
+      </button>
+      ${expanded ? `
+        <div class="accordion-body">
+          ${p.rows.map(r => {
+            if(!r.answered){
+              return `<div class="participant-task-row"><div class="faint">Tarea ${r.taskIndex+1}: sin respuesta</div></div>`;
+            }
+            const meta = statusMeta[r.status] || statusMeta.wrong;
+            return `
+            <div class="participant-task-row">
+              <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+                <div style="min-width:0;flex:1;">
+                  <div class="faint" style="margin-bottom:4px;">Tarea ${r.taskIndex+1}</div>
+                  <div style="font-size:14px;">Respuesta: <span style="font-family:var(--mono);font-weight:600;color:${meta.color};overflow-wrap:break-word;">${escapeHtml(r.theirLabel)}</span></div>
+                  <div style="font-size:12px;margin-top:3px;color:var(--ink-soft);">Respuesta correcta: <span style="font-family:var(--mono);color:#0050B1;font-weight:600;">${escapeHtml(r.correctTokenPath)}</span></div>
+                </div>
+                <div class="faint" style="text-align:right;white-space:nowrap;flex:0 0 auto;">${fmtSec(r.durationMs)} · ${r.clicks} clics · ${r.backtracks} retr.</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      ` : ''}
+    </div>`;
+  }).join('');
+
+  return renderAdminShell(`
+    <div class="stat-grid">
+      <div class="stat"><div class="num">${agg.totalParticipants}</div><div class="lbl">Participantes</div></div>
+      <div class="stat"><div class="num">${Math.round(agg.overallRate*100)}%</div><div class="lbl">Éxito general</div></div>
+      <div class="stat"><div class="num">${state.config.tasks.length}</div><div class="lbl">Tareas</div></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h2>Resultados por participante</h2>
+        ${toolbar}
+      </div>
+      ${participantCards}
+    </div>
+  `);
+}
+function tokenPathForNode(id){
+  const p = findNode(state.config.tree, id);
+  return p ? tokenPath(p) : '—';
+}
+
+/* ---- PARTICIPANTE: intro ---- */
+function renderTestTask(){
+  const t = state.test;
+  const task = state.config.tasks[t.taskIndex];
+  const level = currentTaskLevel();
+  const pathNodes = currentTaskNodePath();
+  const progressPct = Math.round((t.taskIndex/state.config.tasks.length)*100);
+
+  return `
+  <div class="topbar"><div class="brand"><div class="brand-mark"></div><div><h1>Tarea ${t.taskIndex+1} de ${state.config.tasks.length}</h1></div></div></div>
+  <div class="progress-bar"><div class="progress-fill" style="width:${progressPct}%"></div></div>
+  <div class="task-prompt-card">
+    ${task.hex ? `<div class="prompt-swatch" style="background:${task.hex}"></div>` : ''}
+    <p style="font-size:16px;font-weight:560;">${escapeHtml(task.prompt)}</p>
+  </div>
+  <div class="breadcrumb">
+    <div class="breadcrumb-trail">
+      <span>Ruta:</span>
+      ${renderTokenTrail(pathNodes, {cursor:true})}
+    </div>
+    <button class="btn btn-sm btn-outline-blue" data-action="go-back" ${t.path.length===0?'disabled':''}>← Volver</button>
+  </div>
+  <div class="tree-nav">
+    ${level.length ? level.map(n => `
+      <button class="tree-item" data-action="drill" data-node-id="${n.id}">
+        <span>${escapeHtml(n.label)}</span>
+        ${n.children && n.children.length ? '<span class="chev">›</span>' : ''}
+      </button>
+    `).join('') : '<div class="empty-leaf">Este es el último nivel de esta rama.</div>'}
+  </div>
+  <div class="choose-bar">
+    <button class="btn btn-primary" data-action="confirm-answer" ${t.path.length===0?'disabled':''}>Elegir este nivel como respuesta</button>
+  </div>`;
+}
+
+function renderTestDone(){
+  return `
+  <div class="card empty-state">
+    <h2>¡Gracias por participar! 🎉</h2>
+    <p class="muted">Tus respuestas ya se guardaron. Podés cerrar esta ventana.</p>
+    <div style="margin-top:16px;"><button class="btn btn-primary" data-action="go-home">Volver a inicio</button></div>
+  </div>`;
+}
+
+/* ============================= RENDER PRINCIPAL ============================= */
+function render(){
+  const app = document.getElementById('app');
+  let html = '';
+
+  if(state.adminGate.open){
+    html = renderAdminGate();
+  }else if(state.role === 'admin'){
+    if(!state.configLoaded){ html = `<div class="card"><p class="muted">Cargando configuración…</p></div>`; }
+    else if(state.adminTab === 'tree') html = renderTreeTab();
+    else if(state.adminTab === 'tasks') html = renderTasksTab();
+    else html = renderResultsTab();
+  }else{
+    // home / flujo de participante por defecto — no hay pantalla de selección de rol
+    if(!state.configLoaded){ html = `<div class="card"><p class="muted">Cargando ejercicio…</p></div>`; }
+    else if(!state.test) html = renderHomeScreen();
+    else if(state.test.done) html = renderTestDone();
+    else html = renderTestTask();
+  }
+
+  if(state.showJsonModal){
+    const items = state.resultsState.items;
+    html += `
+    <div class="modal-backdrop" data-action="close-modal">
+      <div class="modal" onclick="event.stopPropagation()">
+        <h2 style="margin-bottom:10px;">Resultados en JSON</h2>
+        <p class="muted" style="margin-bottom:10px;">Seleccioná todo el texto y copialo para analizarlo en otra herramienta.</p>
+        <textarea class="json-box" readonly>${escapeHtml(JSON.stringify(items, null, 2))}</textarea>
+        <div style="margin-top:12px;text-align:right;"><button class="btn" data-action="close-modal">Cerrar</button></div>
+      </div>
+    </div>`;
+  }
+
+  if(state.confirmDialog){
+    html += `
+    <div class="modal-backdrop">
+      <div class="modal" style="max-width:420px;" onclick="event.stopPropagation()">
+        <h2 style="margin-bottom:10px;">Confirmar</h2>
+        <p class="muted" style="margin-bottom:18px;">${escapeHtml(state.confirmDialog.message)}</p>
+        <div style="display:flex;justify-content:flex-end;gap:8px;">
+          <button class="btn btn-ghost" data-action="confirm-dialog-no">Cancelar</button>
+          <button class="btn btn-primary" data-action="confirm-dialog-yes" style="background:var(--error);border-color:var(--error);">Sí, continuar</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if(state.toast){
+    const isError = state.toast.kind === 'error';
+    html += `
+    <div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:60;max-width:90vw;">
+      <div style="background:${isError?'var(--error)':'var(--ink)'};color:#fff;padding:12px 16px;border-radius:10px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;font-size:13.5px;">
+        <span>${escapeHtml(state.toast.text)}</span>
+        <button data-action="dismiss-toast" style="background:transparent;border:none;color:#fff;opacity:.7;cursor:pointer;font-size:13px;">Cerrar</button>
+      </div>
+    </div>`;
+  }
+
+  app.innerHTML = html;
+  bindEvents();
+}
+
+/* ============================= BINDING DE EVENTOS ============================= */
+function bindEvents(){
+  const app = document.getElementById('app');
+
+  const adminCodeInput = document.getElementById('admin-code');
+  if(adminCodeInput){
+    adminCodeInput.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        app.querySelector('[data-action="admin-gate-submit"]')?.click();
+      }
+    });
+  }
+
+  app.querySelectorAll('[data-action]').forEach(el => {
+    el.addEventListener('click', async (e) => {
+      const action = el.getAttribute('data-action');
+      const nodeId = el.getAttribute('data-node-id');
+      const taskId = el.getAttribute('data-task-id');
+
+      if(action === 'go-admin'){ state.adminGate.open = true; state.adminGate.error = null; render(); const inp=document.getElementById('admin-code'); if(inp) inp.focus(); }
+      else if(action === 'admin-gate-cancel'){ state.adminGate.open = false; state.adminGate.error = null; render(); }
+      else if(action === 'admin-gate-submit'){
+        const inp = document.getElementById('admin-code');
+        const val = inp ? inp.value : '';
+        if(val === ADMIN_ACCESS_CODE){
+          state.adminGate.open = false; state.adminGate.error = null;
+          state.role='admin'; render(); await ensureConfigLoaded(); render();
+          ensureResultsLoaded();
+        }else{
+          state.adminGate.error = 'Código incorrecto. Probá de nuevo.';
+          render();
+          const inp2=document.getElementById('admin-code'); if(inp2) inp2.focus();
+        }
+      }
+      else if(action === 'go-home'){ state.role=null; state.test=null; render(); }
+      else if(action === 'tab-tree'){ state.adminTab='tree'; render(); }
+      else if(action === 'tab-tasks'){ state.adminTab='tasks'; render(); }
+      else if(action === 'tab-results'){ state.adminTab='results'; render(); ensureResultsLoaded(); }
+      else if(action === 'refresh-results'){ ensureResultsLoaded(true); }
+      else if(action === 'toggle-participant'){
+        const pid = el.getAttribute('data-participant-id');
+        state.participantAccordion[pid] = !state.participantAccordion[pid];
+        render();
+      }
+      else if(action === 'clear-results'){
+        askConfirm('Esto borra TODAS las respuestas guardadas de participantes de forma permanente, para poder arrancar de nuevo. ¿Confirmás?', 'do-clear-results');
+      }
+      else if(action === 'confirm-dialog-yes'){
+        const pending = state.confirmDialog ? state.confirmDialog.actionOnYes : null;
+        state.confirmDialog = null;
+        render();
+        if(pending === 'do-clear-results'){
+          const result = await clearAllResults();
+          const fresh = await loadAllResults();
+          state.resultsState.items = fresh;
+          state.resultsState.loaded = true;
+          render();
+          if(result.ok){ showToast('Resultados eliminados. La sección quedó vacía, lista para empezar de nuevo.', 'ok'); }
+          else{ showToast('No se pudieron borrar todos los resultados (quedaron '+result.remaining+'). Probá de nuevo o usá "Actualizar".', 'error'); }
+        }else if(pending === 'do-reset-tree'){
+          state.config.tree = defaultTree();
+          render(); persistConfig();
+        }
+      }
+      else if(action === 'confirm-dialog-no'){ state.confirmDialog = null; render(); }
+      else if(action === 'dismiss-toast'){ state.toast = null; render(); }
+      else if(action === 'export-json'){ state.showJsonModal=true; render(); }
+      else if(action === 'close-modal'){ state.showJsonModal=false; render(); }
+
+      else if(action === 'add-root'){
+        state.config.tree.push({ id: uid(), label:'Nueva categoría', children:[] });
+        render(); persistConfig();
+      }
+      else if(action === 'add-child'){
+        const p = findNode(state.config.tree, nodeId);
+        if(p){ p[p.length-1].children.push({ id: uid(), label:'Nuevo nivel', children:[] }); }
+        render(); persistConfig();
+      }
+      else if(action === 'delete-node'){
+        removeNode(state.config.tree, nodeId);
+        render(); persistConfig();
+      }
+      else if(action === 'reset-tree'){
+        askConfirm('Esto reemplaza el árbol actual por la nomenclatura completa del archivo "Colors" de Figma (background + text-icon). ¿Continuar?', 'do-reset-tree');
+      }
+      else if(action === 'add-task'){
+        state.config.tasks.push({ id: uid(), prompt:'', hex:'', correctNodeId:'' });
+        render(); persistConfig();
+      }
+      else if(action === 'delete-task'){
+        state.config.tasks = state.config.tasks.filter(t => t.id !== taskId);
+        render(); persistConfig();
+      }
+
+      else if(action === 'begin-test'){
+        const nameInput = document.getElementById('pname');
+        startTest(nameInput ? nameInput.value : '');
+      }
+      else if(action === 'drill'){ drillInto(nodeId); }
+      else if(action === 'go-back'){ goBack(); }
+      else if(action === 'confirm-answer'){ confirmAnswer(); }
+    });
+  });
+
+  // inputs de texto: no re-renderizar en cada tecla (perdería el foco), guardar en 'change' (blur)
+  app.querySelectorAll('input[data-field], textarea[data-field]').forEach(el => {
+    el.addEventListener('change', () => {
+      const field = el.getAttribute('data-field');
+      const nodeId = el.getAttribute('data-node-id');
+      const taskId = el.getAttribute('data-task-id');
+      if(nodeId){
+        const p = findNode(state.config.tree, nodeId);
+        if(p) p[p.length-1][field] = el.value;
+      }else if(taskId){
+        const task = state.config.tasks.find(t => t.id === taskId);
+        if(task) task[field] = el.value;
+      }
+      persistConfig();
+    });
+  });
+  app.querySelectorAll('select[data-field]').forEach(el => {
+    el.addEventListener('change', () => {
+      const taskId = el.getAttribute('data-task-id');
+      const task = state.config.tasks.find(t => t.id === taskId);
+      if(task) task.correctNodeId = el.value;
+      persistConfig();
+      render();
+    });
+  });
+}
+
+function removeNode(tree, id){
+  for(let i=0;i<tree.length;i++){
+    if(tree[i].id === id){ tree.splice(i,1); return true; }
+    if(tree[i].children && removeNode(tree[i].children, id)) return true;
+  }
+  return false;
+}
+
+/* ============================= INIT ============================= */
+render();
+ensureConfigLoaded().then(render);
+</script>
+</body>
+</html>

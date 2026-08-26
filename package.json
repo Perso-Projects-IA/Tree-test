@@ -1,0 +1,21 @@
+{
+  "name": "tree-test-platform",
+  "version": "1.0.0",
+  "description": "Plataforma local para realizar Tree Tests de nomenclatura de tokens de color",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "tree-test",
+    "figma",
+    "tokens",
+    "design-tokens"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
