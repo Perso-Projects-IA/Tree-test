@@ -704,7 +704,7 @@ function renderTokenTrail(pathNodes, opts){
 function renderHomeScreen(){
   return `
   <div class="topbar">
-    <div class="brand"><div class="brand-mark"></div><div><h1>Tree Test de tokens</h1><p class="muted">Validá si tu equipo encuentra los tokens de color por su nombre</p></div></div>
+    <div class="brand"><div><h1>Tree Test de tokens</h1><p class="muted">Validá si tu equipo encuentra los tokens de color por su nombre</p></div></div>
     <button class="btn btn-sm btn-outline-blue" data-action="go-admin">Ingresa como admin</button>
   </div>
   
@@ -731,7 +731,7 @@ function renderAdminGate(){
   const err = state.adminGate.error;
   return `
   <div class="topbar">
-    <div class="brand"><div class="brand-mark"></div><div><h1>Acceso de administrador</h1><p class="muted">Ingresá el código para configurar el árbol, las tareas o ver resultados</p></div></div>
+    <div class="brand"><div><h1>Acceso de administrador</h1><p class="muted">Ingresá el código para configurar el árbol, las tareas o ver resultados</p></div></div>
   </div>
   <div class="card" style="padding:26px;max-width:400px;">
     <div class="field-row">
@@ -755,7 +755,7 @@ function renderAdminShell(inner){
       : '';
   return `
   <div class="topbar">
-    <div class="brand"><div class="brand-mark"></div><div><h1>Tree Test — Administración</h1><p class="muted">${state.saving?'Guardando…':'Cambios guardados automáticamente'}</p></div></div>
+    <div class="brand"><div><h1>Tree Test — Administración</h1><p class="muted">${state.saving?'Guardando…':'Cambios guardados automáticamente'}</p></div></div>
     <div class="top-actions">
       <button class="btn btn-sm btn-outline-blue" data-action="go-home">← Inicio</button>
     </div>
@@ -932,7 +932,7 @@ function renderTestTask(){
   const progressPct = Math.round((t.taskIndex/state.config.tasks.length)*100);
 
   return `
-  <div class="topbar"><div class="brand"><div class="brand-mark"></div><div><h1>Tarea ${t.taskIndex+1} de ${state.config.tasks.length}</h1></div></div></div>
+  <div class="topbar"><div class="brand"><div><h1>Tarea ${t.taskIndex+1} de ${state.config.tasks.length}</h1></div></div></div>
   <div class="progress-bar"><div class="progress-fill" style="width:${progressPct}%"></div></div>
   <div class="task-prompt-card">
     ${task.hex ? `<div class="prompt-swatch" style="background:${task.hex}"></div>` : ''}
