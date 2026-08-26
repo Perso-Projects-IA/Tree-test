@@ -737,7 +737,7 @@ function renderAdminGate(){
   <div class="card" style="padding:26px;max-width:400px;">
     <div class="field-row">
       <label class="field-label" for="admin-code">Código de acceso</label>
-      <input type="password" id="admin-code" placeholder="Código de acceso" autocomplete="off" style="padding:13px 14px;font-size:15px;${err?'border-color:var(--error);':''}">
+      <input type="password" id="admin-code" placeholder="Código de acceso" autocomplete="new-password" style="padding:13px 14px;font-size:15px;${err?'border-color:var(--error);':''}">
       ${err ? `<p style="color:var(--error);font-size:12.5px;margin-top:6px;">${escapeHtml(err)}</p>` : ''}
     </div>
     <div style="display:flex;gap:8px;margin-top:14px;">
@@ -1051,11 +1051,16 @@ function bindEvents(){
       const taskId = el.getAttribute('data-task-id');
 
       if(action === 'go-admin'){ state.adminGate.open = true; state.adminGate.error = null; render(); const inp=document.getElementById('admin-code'); if(inp) inp.focus(); }
-      else if(action === 'admin-gate-cancel'){ state.adminGate.open = false; state.adminGate.error = null; render(); }
+      else if(action === 'admin-gate-cancel'){
+        const inp = document.getElementById('admin-code');
+        if(inp) inp.value = '';
+        state.adminGate.open = false; state.adminGate.error = null; render();
+      }
       else if(action === 'admin-gate-submit'){
         const inp = document.getElementById('admin-code');
         const val = inp ? inp.value : '';
         if(val === ADMIN_ACCESS_CODE){
+          if(inp) inp.value = '';
           state.adminGate.open = false; state.adminGate.error = null;
           state.role='admin'; render(); await ensureConfigLoaded(); render();
           ensureResultsLoaded();
