@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   :root{
     --bg:#F5F6F8;
@@ -658,6 +659,133 @@ function aggregateResults(){
   return { totalParticipants: items.length, overallRate: overallN ? overallSuccess/overallN : 0, labelMap: map };
 }
 
+async function exportPdfReport() {
+  const items = state.resultsState.items;
+  if (!items || !items.length) return;
+
+  const agg = aggregateResults();
+  const participants = buildParticipantSummaries();
+  const tasks = state.config.tasks;
+
+  const element = document.createElement('div');
+  element.style.padding = '35px';
+  element.style.fontFamily = 'Arial, sans-serif';
+  element.style.color = '#14171C';
+  element.style.background = '#FFFFFF';
+  
+  let html = `
+    <h1 style="font-size: 22px; margin-bottom: 5px; color: #0050B1;">Reporte de Resultados — Tree Test</h1>
+    <p style="font-size: 12px; color: #5B6270; margin-bottom: 25px;">Generado el ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+    
+    <div style="display: flex; gap: 15px; margin-bottom: 30px;">
+      <div style="flex: 1; border: 1px solid #E1E4EA; padding: 15px; border-radius: 8px; text-align: center; background: #F5F6F8;">
+        <div style="font-size: 24px; font-weight: 700; color: #0050B1;">${agg.totalParticipants}</div>
+        <div style="font-size: 11px; text-transform: uppercase; color: #5B6270; margin-top: 4px; font-weight: 600;">Participantes</div>
+      </div>
+      <div style="flex: 1; border: 1px solid #E1E4EA; padding: 15px; border-radius: 8px; text-align: center; background: #F5F6F8;">
+        <div style="font-size: 24px; font-weight: 700; color: #1E8E5A;">${(agg.overallRate * 100).toFixed(0)}%</div>
+        <div style="font-size: 11px; text-transform: uppercase; color: #5B6270; margin-top: 4px; font-weight: 600;">Éxito Promedio</div>
+      </div>
+    </div>
+
+    <h2 style="font-size: 15px; margin-bottom: 12px; border-bottom: 2px solid #E1E4EA; padding-bottom: 6px; color: #14171C;">Resultados por Participante</h2>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 35px; font-size: 12px;">
+      <thead>
+        <tr style="background: #EFF1F5; text-align: left;">
+          <th style="padding: 10px; border: 1px solid #E1E4EA; font-weight: 600;">Participante</th>
+          <th style="padding: 10px; border: 1px solid #E1E4EA; font-weight: 600;">Fecha de Envío</th>
+          <th style="padding: 10px; border: 1px solid #E1E4EA; text-align: center; font-weight: 600;">Aciertos</th>
+          <th style="padding: 10px; border: 1px solid #E1E4EA; text-align: center; font-weight: 600;">% Éxito</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  participants.forEach(p => {
+    html += `
+      <tr>
+        <td style="padding: 10px; border: 1px solid #E1E4EA; font-weight: 600; color: #14171C;">${escapeHtml(p.label)}</td>
+        <td style="padding: 10px; border: 1px solid #E1E4EA; color: #5B6270;">${new Date(p.submittedAt).toLocaleDateString()}</td>
+        <td style="padding: 10px; border: 1px solid #E1E4EA; text-align: center;">${p.successCount} / ${p.total}</td>
+        <td style="padding: 10px; border: 1px solid #E1E4EA; text-align: center; font-weight: bold; color: ${p.successRate >= 0.7 ? '#1E8E5A' : p.successRate >= 0.4 ? '#B8862B' : '#D6455B'}">${(p.successRate * 100).toFixed(0)}%</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+
+    <h2 style="font-size: 15px; margin-bottom: 12px; border-bottom: 2px solid #E1E4EA; padding-bottom: 6px; color: #14171C;">Rendimiento por Tarea</h2>
+    <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+      <thead>
+        <tr style="background: #EFF1F5; text-align: left;">
+          <th style="padding: 10px; border: 1px solid #E1E4EA; width: 50%; font-weight: 600;">Pregunta / Token Esperado</th>
+          <th style="padding: 10px; border: 1px solid #E1E4EA; text-align: center; font-weight: 600;">Éxito (Aciertos)</th>
+          <th style="padding: 10px; border: 1px solid #E1E4EA; text-align: center; font-weight: 600;">Clics Prom.</th>
+          <th style="padding: 10px; border: 1px solid #E1E4EA; text-align: center; font-weight: 600;">Tiempo Prom.</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  tasks.forEach((task, idx) => {
+    let n = 0, success = 0, clicksSum = 0, durationSum = 0;
+    items.forEach(it => {
+      const pt = (it.perTask || []).find(p => p.taskId === task.id);
+      if (pt) {
+        n++;
+        if (pt.success) success++;
+        clicksSum += pt.clicks || 0;
+        durationSum += pt.durationMs || 0;
+      }
+    });
+
+    const rate = n ? success / n : 0;
+    const avgClicks = n ? (clicksSum / n).toFixed(1) : '—';
+    const avgTime = n ? (durationSum / n / 1000).toFixed(1) + 's' : '—';
+
+    html += `
+      <tr>
+        <td style="padding: 10px; border: 1px solid #E1E4EA;">
+          <div style="font-weight: 600; color: #14171C; margin-bottom: 4px;">${idx + 1}. ${escapeHtml(task.prompt)}</div>
+          <div style="font-family: monospace; font-size: 10.5px; color: #0050B1;">${task.correctNodeId ? tokenPathForNode(task.correctNodeId) : '—'}</div>
+        </td>
+        <td style="padding: 10px; border: 1px solid #E1E4EA; text-align: center; font-weight: bold; color: ${rate >= 0.7 ? '#1E8E5A' : rate >= 0.4 ? '#B8862B' : '#D6455B'}">
+          ${success} / ${n} (${(rate * 100).toFixed(0)}%)
+        </td>
+        <td style="padding: 10px; border: 1px solid #E1E4EA; text-align: center;">${avgClicks}</td>
+        <td style="padding: 10px; border: 1px solid #E1E4EA; text-align: center;">${avgTime}</td>
+      </tr>
+    `;
+  });
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  element.innerHTML = html;
+
+  const opt = {
+    margin:       15,
+    filename:     `reporte-tree-test-${new Date().toISOString().slice(0,10)}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  try {
+    showToast('Generando reporte PDF...', 'info');
+    await html2pdf().set(opt).from(element).save();
+    showToast('Reporte PDF descargado con éxito.', 'ok');
+  } catch (err) {
+    console.error('Error al generar PDF:', err);
+    showToast('Error al generar el PDF. Revisa tu conexión de red.', 'error');
+  }
+}
+
+
 function buildParticipantSummaries(){
   const items = state.resultsState.items;
   const tasks = state.config.tasks;
@@ -847,7 +975,7 @@ function renderResultsTab(){
   const toolbar = `
     <div class="top-actions">
       <button class="btn btn-sm btn-ghost" data-action="refresh-results">Actualizar</button>
-      ${items.length ? '<button class="btn btn-sm btn-ghost" data-action="export-json">Ver / copiar JSON</button>' : ''}
+      ${items.length ? '<button class="btn btn-sm btn-ghost" data-action="export-json">Ver / copiar JSON</button><button class="btn btn-sm btn-ghost" data-action="export-pdf">Descargar reporte PDF</button>' : ''}
     </div>`;
   if(!items.length){
     return renderAdminShell(`
@@ -1103,6 +1231,7 @@ function bindEvents(){
       else if(action === 'confirm-dialog-no'){ state.confirmDialog = null; render(); }
       else if(action === 'dismiss-toast'){ state.toast = null; render(); }
       else if(action === 'export-json'){ state.showJsonModal=true; render(); }
+      else if(action === 'export-pdf'){ await exportPdfReport(); }
       else if(action === 'close-modal'){ state.showJsonModal=false; render(); }
 
       else if(action === 'add-root'){
