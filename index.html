@@ -712,14 +712,15 @@ function renderHomeScreen(){
     <img src="img/header_colors.png" alt="Header Colors" style="width: 100%; height: auto; display: block; object-fit: cover; max-height: 180px;">
   </div>
 
-  <div class="card" style="padding:24px;">
-    <p style="font-size:15px;line-height:1.55;color:var(--ink-soft);font-weight:400;">Este ejercicio muestra un color a la persona participante y le pide que navegue el árbol de nomenclatura (sin buscador, sin ver el color real del token) hasta encontrar dónde estaría ese token. Así medimos si los nombres actuales son fáciles de encontrar.</p>
-    <div style="margin-top:12px;">${renderTokenTrail([{label:'background'},{label:'primary'},{label:'hover'}])}</div>
-  </div>
-  <div class="card" style="padding:26px;">
+  <div class="card" style="padding:28px;">
+    <p style="font-size:15px;line-height:1.55;color:var(--ink-soft);font-weight:400;margin-bottom:14px;">Este ejercicio muestra un color a la persona participante y le pide que navegue el árbol de nomenclatura (sin buscador, sin ver el color real del token) hasta encontrar dónde estaría ese token. Así medimos si los nombres actuales son fáciles de encontrar.</p>
+    <div style="margin-bottom:24px;">${renderTokenTrail([{label:'background'},{label:'primary'},{label:'hover'}])}</div>
+    
+    <hr style="border:none; border-top:1px solid var(--border); margin:24px 0;">
+
     <h2>Cómo funciona</h2>
-    <p class="muted" style="margin:10px 0 16px;">Vas a ver ${state.config.tasks.length} colores, uno por vez, con una breve descripción de dónde se usan. Tu tarea es navegar las categorías hasta encontrar dónde crees que estaría ese token — como si buscaras en una carpeta, sin buscador. No hay respuestas "lindas" ni "feas": solo nos interesa si el nombre es fácil o difícil de encontrar.</p>
-    <div class="field-row" style="max-width:320px;">
+    <p class="muted" style="margin:10px 0 18px;">Vas a ver ${state.config.tasks.length} colores, uno por vez, con una breve descripción de dónde se usan. Tu tarea es navegar las categorías hasta encontrar dónde crees que estaría ese token — como si buscaras en una carpeta, sin buscador. No hay respuestas "lindas" ni "feas": solo nos interesa si el nombre es fácil o difícil de encontrar.</p>
+    <div class="field-row" style="max-width:320px; margin-bottom:16px;">
       <label class="field-label" for="pname">Tu nombre o alias (opcional)</label>
       <input type="text" id="pname" placeholder="Ej: Ana - UX">
     </div>
